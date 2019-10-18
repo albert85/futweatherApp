@@ -1,7 +1,9 @@
 import React, {Component, Fragment} from 'react';
-import {styles} from './ReportStyleSheet';
-
 import {Image, View, Text} from 'react-native';
+import {Container, Content, Card, CardItem} from 'native-base';
+import moment from 'moment';
+
+import {styles} from './ReportStyleSheet';
 
 export default class Report extends Component {
   state = {
@@ -18,10 +20,11 @@ export default class Report extends Component {
       },
     } = this.props.navigation;
 
+    const selectedcityvalue = selectedvalue.citySelected.split(' ');
+    const cityvalue = selectedcityvalue[0];
+
     fetch(
-      `http://api.openweathermap.org/data/2.5/forecast?q=${
-        selectedvalue.citySelected
-      },ng&appid=182a7a3fa380dc5efe7e62fb6fbbf390`,
+      `http://api.openweathermap.org/data/2.5/forecast?q=${cityvalue},ng&appid=182a7a3fa380dc5efe7e62fb6fbbf390`,
     )
       .then(data => {
         return data.json();
@@ -54,13 +57,70 @@ export default class Report extends Component {
         });
       });
   }
+  getWeatherIcon = weatherIcon => {
+    switch (weatherIcon) {
+      case 'Thunderstorm':
+        return require('../../../assets/thunderstorm.png');
+      case 'Clouds':
+        return require('../../../assets/cloudy.png');
+      case 'Rain':
+        return require('../../../assets/rainy.png');
+      case 'Clear':
+        return require('../../../assets/sunny.png');
+      default:
+        return require('../../../assets/cloud-outline.png');
+    }
+  };
+
+  renderWeatherList = () => {
+    const forecastfilter = this.state.weatherReport;
+    const weatherForcast = forecastfilter.map((forcast, index) => {
+      return this.renderWeatherCard(forcast, index);
+    });
+    return weatherForcast;
+  };
+
+  renderWeatherCard = (report, index) => {
+    const weatherIcon = report && this.getWeatherIcon(report.weather[0].main);
+    return (
+      <Card key={index}>
+        {report && (
+          <CardItem cardBody>
+            <Image source={weatherIcon} style={styles.WeatherImg} />
+          </CardItem>
+        )}
+        <CardItem style={styles.CardContentLayoutthird}>
+          <Text style={styles.CardContentLayout}>
+            <Text style={styles.BoldText}>Day: </Text>
+            {moment(report.dt_txt).format('dddd')}
+          </Text>
+          <Text>
+            <Text style={styles.BoldText}>Temp(F): </Text>
+            {report.main.temp}
+          </Text>
+        </CardItem>
+        <CardItem style={styles.CardContentLayoutthird}>
+          <Text style={styles.CardContentLayoutsecond}>
+            <Text style={styles.BoldText}>Date: </Text>
+            {report.dt_txt}
+          </Text>
+          <Text>
+            <Text style={styles.BoldText}>Status: </Text>
+            {report.weather[0].main}
+          </Text>
+        </CardItem>
+      </Card>
+    );
+  };
+
   render() {
     return (
-      <Fragment>
-        <View>
+      <Container style={styles.ReportLayout}>
+        <Content>
           <Text>I DEY HERE WELLA</Text>
-        </View>
-      </Fragment>
+          {this.renderWeatherList()}
+        </Content>
+      </Container>
     );
   }
 }
